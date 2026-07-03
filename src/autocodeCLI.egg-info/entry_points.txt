@@ -1,0 +1,2 @@
+[console_scripts]
+autocode = autocodeCLI.cli:main

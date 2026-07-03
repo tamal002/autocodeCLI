@@ -1,6 +1,6 @@
 [project]
 name = "autocodeCLI"
-version = "0.1.0"
+version = "0.1.1"
 description = "An AI-powered CLI coding agent that plans, writes, and reviews Python code directly in your workspace."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,8 +16,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/autocodeCLI"
-Issues = "https://github.com/yourusername/autocodeCLI/issues"
+Homepage = "https://github.com/tamal002/autocodeCLI"
+Issues = "https://github.com/tamal002/autocodeCLI/issues"
 
 [project.scripts]
 autocode = "autocodeCLI.cli:main"
