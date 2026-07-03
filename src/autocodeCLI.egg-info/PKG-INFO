@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: autocodeCLI
-Version: 0.1.1
+Version: 0.1.2
 Summary: An AI-powered CLI coding agent that plans, writes, and reviews Python code directly in your workspace.
 Author-email: Tamal Saha <tamalsaha019@gmail.com>
 Project-URL: Homepage, https://github.com/tamal002/autocodeCLI

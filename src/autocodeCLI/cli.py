@@ -12,7 +12,7 @@ from langgraph.stream.transformers import AIMessageChunk
 from langchain_core.messages import HumanMessage, ToolMessage, RemoveMessage
 
 # Import agent logic from our separated file
-from coding_agent.agent import get_agent, reset_agent, WORKING_DIR
+from autocodeCLI.agent import get_agent, reset_agent, WORKING_DIR
 
 CONFIG_FILE = Path.home() / ".autocode_env"
 

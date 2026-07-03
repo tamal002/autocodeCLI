@@ -1,6 +1,6 @@
 [project]
 name = "autocodeCLI"
-version = "0.1.1"
+version = "0.1.2"
 description = "An AI-powered CLI coding agent that plans, writes, and reviews Python code directly in your workspace."
 readme = "README.md"
 requires-python = ">=3.10"
