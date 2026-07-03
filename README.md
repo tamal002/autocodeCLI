@@ -1,0 +1,24 @@
+# autocodeCLI
+
+**autocodeCLI** is an AI-powered terminal assistant that acts as your personal Senior Python Developer. It plans, writes, reviews, and refactors Python code directly inside your current working directory. 
+
+Powered by NVIDIA AI endpoints, it handles the entire software development lifecycle—from breaking down your natural language request into logical steps to delivering production-ready, peer-reviewed code.
+
+---
+
+## 🌟 Features
+
+* **Context-Aware Workspace:** Runs directly in your current directory. It writes and edits files exactly where you open it.
+* **Intelligent Planning:** Breaks complex tasks down into logical implementation steps before writing code.
+* **Automated Code Review:** Utilizes an internal sub-agent to review the written code for syntax errors, logical bugs, and edge cases, automatically fixing issues before final delivery.
+* **Secure API Key Management:** Safely stores your NVIDIA API key in a global, isolated configuration file (`~/.autocode_env`).
+
+---
+
+## 🚀 Installation
+
+Because **autocodeCLI** is a global terminal tool, it is highly recommended to install it using a tool manager like `uv` or `pipx`. This keeps its dependencies safely isolated from your system's global Python environment.
+
+**Using uv (Recommended):**
+```bash
+uv tool install autocodeCLI

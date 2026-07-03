@@ -1,0 +1,27 @@
+[project]
+name = "autocodeCLI"
+version = "0.1.0"
+description = "An AI-powered CLI coding agent that plans, writes, and reviews Python code directly in your workspace."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Tamal Saha", email = "tamalsaha019@gmail.com" }
+]
+dependencies = [
+    "langgraph",
+    "rich",
+    "deepagents",
+    "python-dotenv",
+    "langchain-nvidia-ai-endpoints",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/autocodeCLI"
+Issues = "https://github.com/yourusername/autocodeCLI/issues"
+
+[project.scripts]
+autocode = "autocodeCLI.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

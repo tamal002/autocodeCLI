@@ -1,0 +1,2 @@
+[console_scripts]
+autocode = coding_agent.cli:main
