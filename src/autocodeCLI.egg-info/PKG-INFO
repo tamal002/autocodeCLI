@@ -13,6 +13,7 @@ Requires-Dist: rich
 Requires-Dist: deepagents
 Requires-Dist: python-dotenv
 Requires-Dist: langchain-nvidia-ai-endpoints
+Requires-Dist: langchain-ollama>=1.1.0
 Dynamic: license-file
 
 # autocodeCLI

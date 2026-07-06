@@ -3,7 +3,9 @@ README.md
 pyproject.toml
 src/autocodeCLI/__init__.py
 src/autocodeCLI/agent.py
+src/autocodeCLI/banner.py
 src/autocodeCLI/cli.py
+src/autocodeCLI/model_comfig.py
 src/autocodeCLI.egg-info/PKG-INFO
 src/autocodeCLI.egg-info/SOURCES.txt
 src/autocodeCLI.egg-info/dependency_links.txt

@@ -3,3 +3,4 @@ rich
 deepagents
 python-dotenv
 langchain-nvidia-ai-endpoints
+langchain-ollama>=1.1.0
