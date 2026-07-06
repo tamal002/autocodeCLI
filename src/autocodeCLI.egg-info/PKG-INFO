@@ -5,7 +5,7 @@ Summary: An AI-powered CLI coding agent that plans, writes, and reviews Python c
 Author-email: Tamal Saha <tamalsaha019@gmail.com>
 Project-URL: Homepage, https://github.com/tamal002/autocodeCLI
 Project-URL: Issues, https://github.com/tamal002/autocodeCLI/issues
-Requires-Python: >=3.10
+Requires-Python: >=3.11
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: langgraph

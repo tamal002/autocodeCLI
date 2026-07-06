@@ -6,6 +6,8 @@ from deepagents import create_deep_agent
 from deepagents.backends import FilesystemBackend
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
+from langchain_openrouter import ChatOpenRouter
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Setup Working Directory and Environment
 WORKING_DIR = os.getcwd()
@@ -110,8 +112,11 @@ def get_agent():
     """Lazily initializes and returns the agent instance."""
     global _agent_instance
     if _agent_instance is None:
-        model = ChatNVIDIA(model="z-ai/glm-5.2")
-        
+        model = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash-lite",
+            temperature=0.1,
+        )
+
         _agent_instance = create_deep_agent(
             model=model,
             system_prompt=SYSTEM_PROMPT,

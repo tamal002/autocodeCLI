@@ -3,7 +3,7 @@ name = "autocodeCLI"
 version = "0.1.2"
 description = "An AI-powered CLI coding agent that plans, writes, and reviews Python code directly in your workspace."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
     { name = "Tamal Saha", email = "tamalsaha019@gmail.com" }
 ]
