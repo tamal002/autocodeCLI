@@ -1,5 +1,7 @@
 import os
 import uuid
+import questionary
+import autocodeCLI.agent as agent_module
 # from pathlib import Path
 # from dotenv import load_dotenv
 from rich.console import Console
@@ -59,6 +61,30 @@ def main():
         }
     }
 
+    status = console.status("[bold cyan]🧠 Thinking...[/bold cyan]", spinner="dots")
+    
+
+    def cli_approval_hook(action_description: str) -> bool:
+        status.stop() # Pause the spinner
+        console.print() 
+        
+        # Launch the interactive arrow-key menu
+        choice = questionary.select(
+            f"⚠️ The agent wants to {action_description}. Proceed?",
+            choices=["Allow", "Reject"],
+            default="Reject"
+        ).ask()
+        
+        approved = (choice == "Allow")
+        
+        if not approved:
+            console.print("[dim]Action denied. Returning control to agent...[/dim]\n")
+            
+        status.start() # Resume the spinner
+        return approved
+
+    agent_module.ask_user_approval = cli_approval_hook
+
     while True:
         try:
             task = console.input("[bold green]❯[/] ").strip()
@@ -103,7 +129,9 @@ def main():
             start_time = time.time()
             current_ai_msg_id = None
 
-            with console.status("[bold cyan]🧠 Thinking...[/bold cyan]", spinner="dots") as status:
+            status.update("[bold cyan]🧠 Thinking...[/bold cyan]")
+
+            with status:
                 
                 for chunk, metadata in agent.stream(
                     {"messages": [HumanMessage(content=task)]},

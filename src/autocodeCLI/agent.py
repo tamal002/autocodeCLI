@@ -10,26 +10,26 @@ from langchain_core.tools import tool
 WORKING_DIR = os.getcwd()
 
 
+ask_user_approval = None
+
 
 @tool(description="Deletes a file from the current project directory.")
 def delete_file(path: str) -> str:
-    """
-        Delete a file from the current project.
-
-    Args:
-        path: Relative path to the file (e.g. "/main.py" or "/index.js").
-
-    Returns:
-        A message indicating whether the file was deleted.
-    """
+    """Delete a file from the current project."""
     path = path.lstrip("/\\")
     full_path = Path(WORKING_DIR) / path
 
+    # 1. STOP AND ASK THE HUMAN
+    if ask_user_approval:
+        is_approved = ask_user_approval(f"delete the file: {full_path.name}")
+        if not is_approved:
+            return f"Error: The user denied permission to delete {full_path.name}."
+
+    # 2. EXECUTE IF APPROVED
     if not full_path.exists():
         return f"{full_path} does not exist."
 
     full_path.unlink()
-
     return f"Deleted {full_path}"
 
 
