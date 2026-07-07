@@ -2,15 +2,12 @@ import os
 import uuid
 import questionary
 import autocodeCLI.agent as agent_module
-# from pathlib import Path
-# from dotenv import load_dotenv
 from rich.console import Console
-# from rich.live import Live
-# from rich.spinner import Spinner
-# from rich.text import Text
 from rich.markdown import Markdown
 import time
-from autocodeCLI.model_comfig import load_settings, save_settings
+from autocodeCLI.model_comfig import load_settings
+from autocodeCLI.parser import setup_cli_parser
+from autocodeCLI.commands import execute_set_model
 from langgraph.stream.transformers import AIMessageChunk
 from langchain_core.messages import HumanMessage, ToolMessage, RemoveMessage
 from autocodeCLI.agent import get_agent, WORKING_DIR
@@ -32,26 +29,50 @@ os.environ["AUTOCODE_MODEL"] = settings.get("model", "gpt-4o")
 
 def main():
     console = Console()
+
+    # 1. SETUP TERMINAL ARGUMENT PARSING (Delegated to parser.py)
+    parser = setup_cli_parser()
+    args = parser.parse_args()
+
+    # 2. RUNTIME CONFIGURATION MODE BOUNDARY
+    if args.command == "set-model":
+        execute_set_model(args, console)
+
+    # 3. RUNTIME INTERACTIVE CHAT MODE BOUNDARY
+    settings = load_settings()
+
+    # 3.1 Dynamically inject configuration parameters into environment memory
+    if settings["api_key"] or settings["api_key"] != "":
+        os.environ[f"{settings['provider'].upper()}_API_KEY"] = settings["api_key"]
+    os.environ["AUTOCODE_PROVIDER"] = settings.get("provider", "openai")
+    os.environ["AUTOCODE_MODEL"] = settings.get("model", "gpt-4o")
+    if settings.get("base_url"):
+        os.environ["AUTOCODE_BASE_URL"] = settings["base_url"]
+
+
+    # 3.2 Display a welcome banner and current configuration state
     console.print(banner, style="cyan")
     console.print("[bold cyan]🚀 Auto-code CLI[/bold cyan]")
     console.print(f"[dim]Active Directory:[/] {WORKING_DIR}")
     console.rule()
 
-    # Determine runtime provider state
+
+    # 3.3 Determine runtime provider state
     provider = os.environ.get("AUTOCODE_PROVIDER", "openai")
     model_name = os.environ.get("AUTOCODE_MODEL", "gpt-4o")
     current_key_env = f"{provider.upper()}_API_KEY"
-    has_valid_key = bool(os.environ.get(current_key_env))
 
-    # Greet user dynamically based on active configuration data
-    if not has_valid_key:
-        console.print(f"[bold yellow]⚠️  No API Key detected for runtime provider: {provider}[/bold yellow]")
-        console.print("To configure your engine, issue the setup command:")
-        console.print("[bold white]/set-model <provider> <model_name> <api_key>[/bold white]")
-        console.print("Example: /set-model anthropic claude-sonnet-5 sk-ant-...\n")
+    chat_enable = bool(os.environ.get(current_key_env))
+
+
+    # 3.4 Greet user dynamically based on active configuration data
+    if not chat_enable:
+        console.print(f"[bold yellow]⚠️  No API Key detected for provider: {provider}[/bold yellow]")
+        console.print("To configure your engine out of chat, run this in your terminal:")
+        console.print("[bold white]autocode set-model <provider> <model_name> <api_key>\nfor provider 'ollama', no API key is required[/bold white]\n")
     else:
         console.print(f"[bold green]✅ Engine Operational:[/] {provider} ({model_name})")
-        console.print("[dim]Use /set-model to modify your core infrastructure environment at any time.[/]")
+        console.print("[dim]Use the system shell command 'set-model' to redirect backend targets outside of chat.[/]")
 
     console.print("[dim]Type 'exit' or 'quit' to leave.[/]\n")
 
@@ -63,6 +84,8 @@ def main():
 
     status = console.status("[bold cyan]🧠 Thinking...[/bold cyan]", spinner="dots")
     
+
+
 
     def cli_approval_hook(action_description: str) -> bool:
         status.stop() # Pause the spinner
@@ -83,9 +106,12 @@ def main():
         status.start() # Resume the spinner
         return approved
 
+
+
+
     agent_module.ask_user_approval = cli_approval_hook
 
-    while True:
+    while chat_enable:
         try:
             task = console.input("[bold green]❯[/] ").strip()
 
@@ -95,31 +121,6 @@ def main():
             if task.lower() in {"exit", "quit"}:
                 console.print("\n👋 Goodbye!\n")
                 break
-
-            # Handle model re-configuration profiles dynamically
-            if task.startswith("/set-model "):
-                parts = task.split()
-                if len(parts) == 4:
-                    _, new_provider, new_model, new_key = parts
-                    save_settings(new_provider, new_model, new_key)
-                    
-                    # Refresh local loop states instantly
-                    provider = os.environ.get("AUTOCODE_PROVIDER")
-                    model_name = os.environ.get("AUTOCODE_MODEL")
-                    console.print(f"[bold green]✅ Core engine migrated to {new_provider} ({new_model}) successfully![/bold green]\n")
-                else:
-                    console.print("[bold red]❌ Invalid usage pattern.[/bold red]")
-                    console.print("Required syntax: [bold white]/set-model <provider> <model_name> <api_key>[/bold white]\n")
-                continue
-
-
-            # Core Blocker Rule: Guard loop execution against unassigned keys matching active providers
-            provider = os.environ.get("AUTOCODE_PROVIDER", "openai")
-            current_key_env = f"{provider.upper()}_API_KEY"
-            if not os.environ.get(current_key_env):
-                console.print(f"[bold red]❌ Execution halted. API Key for '{provider}' is completely blank.[/bold red]")
-                console.print("Provision credentials using: [bold yellow]/set-model <provider> <model_name> <api_key>[/bold yellow]\n")
-                continue
 
             # Fetch a fresh graph instance updated via backend factory
             agent = get_agent()
@@ -179,6 +180,9 @@ def main():
             break
         except Exception as e:
             console.print(f"[bold red]✗ Error encountered: {e}[/bold red]")
+
+
+
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,5 @@
 import os
+import subprocess
 from pathlib import Path
 from deepagents import create_deep_agent
 from deepagents.backends import FilesystemBackend
@@ -31,6 +32,59 @@ def delete_file(path: str) -> str:
 
     full_path.unlink()
     return f"Deleted {full_path}"
+
+
+
+@tool(description="Executes a git command in the current project directory.")
+def execute_git_command(command: str) -> str:
+    """
+    Execute a Git command safely within the project repository.
+
+    Args:
+        command: The complete git command to run (e.g., "git status", "git add .", "git commit -m 'feat: init'").
+
+    Returns:
+        The standard output or error from the git execution.
+    """
+    # Guardrail: Ensure it is strictly a git command for security boundaries
+    clean_command = command.strip()
+    if not clean_command.startswith("git"):
+        return "Error: This tool only accepts commands that begin with 'git'."
+
+    # Identify modifying/destructive git operations that require human intervention
+    write_operations = ["commit", "push", "reset", "clean", "checkout", "revert", "merge", "init"]
+    
+    # Check if the command contains any of the write operations
+    requires_approval = any(op in clean_command for op in write_operations)
+
+    # Trigger your Questionary UI hook if approval is required
+    if requires_approval and ask_user_approval:
+        is_approved = ask_user_approval(f"execute command: '{clean_command}'")
+        if not is_approved:
+            return f"Error: The user explicitly denied permission to run '{clean_command}'."
+
+    try:
+        # Run the command safely inside the active workspace directory
+        result = subprocess.run(
+            clean_command,
+            shell=True,
+            cwd=WORKING_DIR,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=30  # Prevent hanging commands
+        )
+        
+        output = result.stdout if result.stdout else ""
+        error = result.stderr if result.stderr else ""
+        
+        if result.returncode != 0:
+            return f"Command failed with exit code {result.returncode}.\nOutput: {output}\nError: {error}"
+        
+        return output if output.strip() else "Command executed successfully with no text output."
+
+    except Exception as e:
+        return f"An exception occurred while executing the system process: {str(e)}"
 
 
 
@@ -88,6 +142,11 @@ You are a Universal Software Engineering Agent.
 4. **Quality Control**: Once code is written, delegate a review to the code_reviewer sub-agent. If the reviewer flags issues, apply fixes until the review is clean.
 5. **Final Delivery**: Verify all files and inform the user how to get started.
 
+**Version Control Rules**:
+- You have access to the `execute_git_command` tool. 
+- Use `git status` or `git diff` to explore the codebase state if you are unsure what changes have been made.
+- Do not make a git commit unless the user explicitly asks you to save or commit your changes.
+
 **Guidelines**:
 - You are operating in the user's current working directory. Do not create a new root folder for the project unless explicitly instructed; put the files right where you are.
 - Prioritize production-quality code over pseudo-code.
@@ -122,7 +181,7 @@ def get_agent():
         _agent_instance = create_deep_agent(
             model=model,
             system_prompt=SYSTEM_PROMPT,
-            tools=[delete_file],
+            tools=[delete_file, execute_git_command],
             subagents=[code_reviewer],
             # Note: virtual_mode=False is critical here so it writes actual files to the user's directory
             backend=FilesystemBackend(root_dir=WORKING_DIR, virtual_mode=False),

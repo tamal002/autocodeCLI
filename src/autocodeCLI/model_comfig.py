@@ -22,14 +22,15 @@ def load_settings():
 
 
 
-def save_settings(provider: str, model_name: str, key: str):
+def save_settings(provider: str, model_name: str, key: str, base_url: str):
     """Saves the settings to disk, exports them to environment variables, and resets the agent machine."""
     SETTINGS_DIR.mkdir(parents=True, exist_ok=True)
     
     settings_data = {
         "provider": provider.lower().strip(),
         "model": model_name.strip(),
-        "api_key": key.strip()
+        "api_key": key.strip(),
+        "base_url": base_url.strip()
     }
     
     with open(SETTINGS_FILE, "w") as f:
