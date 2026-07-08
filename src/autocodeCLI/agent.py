@@ -6,6 +6,7 @@ from deepagents.backends import FilesystemBackend
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain.chat_models import init_chat_model
 from langchain_core.tools import tool
+from autocodeCLI.subagents import code_reviewer, system_architect, debugger, api_researcher
 
 # Setup Working Directory and Environment
 WORKING_DIR = os.getcwd()
@@ -87,45 +88,52 @@ def execute_git_command(command: str) -> str:
         return f"An exception occurred while executing the system process: {str(e)}"
 
 
+@tool(description="Executes a terminal command to run code, start a server, or run tests.")
+def execute_terminal_command(command: str) -> str:
+    """
+    Execute a terminal command to run code, start a server, or run tests.
+
+    Args:
+        command: The terminal command to execute (e.g., "python script.py", "npm run test").
+
+    Returns:
+        The standard output or error from the execution.
+    """
+    # 1. ALWAYS ASK FOR HUMAN APPROVAL FOR RAW COMMANDS
+    if ask_user_approval:
+        is_approved = ask_user_approval(f"run the terminal command: '{command}'")
+        if not is_approved:
+            return f"Error: The user explicitly denied permission to run '{command}'."
+
+    try:
+        # Run the command safely inside the active workspace directory
+        result = subprocess.run(
+            command,
+            shell=True,
+            cwd=WORKING_DIR,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=60  # Give it 60 seconds to run tests or scripts before killing it
+        )
+        
+        output = result.stdout if result.stdout else ""
+        error = result.stderr if result.stderr else ""
+        
+        if result.returncode != 0:
+            return f"Command failed with exit code {result.returncode}.\nOutput:\n{output}\nError:\n{error}"
+        
+        return f"Execution successful.\nOutput:\n{output}"
+
+    except subprocess.TimeoutExpired:
+        return "Error: Command timed out after 60 seconds. (If this is a long-running server, tell the user to start it manually)."
+    except Exception as e:
+        return f"An exception occurred while executing the system process: {str(e)}"
+
+
 
 # sub-agent
-code_reviewer = {
-    "name": "code_reviewer",
-    "description": "Expert agent responsible for comprehensive code review across all languages.",
-    "system_prompt": """
-            You are a senior software engineer specializing in universal code reviews.
 
-            Your responsibilities include:
-            1. Detect syntax and runtime errors specific to the language being used.
-            2. Identify logical bugs and incorrect assumptions.
-            3. Find edge cases the code does not handle.
-            4. Review algorithmic complexity and performance.
-            5. Detect security vulnerabilities.
-            6. Evaluate readability, maintainability, and standard code style for the given framework.
-            7. Suggest refactoring where appropriate.
-            8. Recommend better data structures or algorithms when beneficial.
-            9. Explain every issue with clear reasoning.
-            10. Provide corrected code snippets when necessary.
-
-            Always structure your review as:
-
-            ## Summary
-            Overall assessment.
-
-            ## Issues
-            - Severity (Critical / High / Medium / Low)
-            - Description
-            - Why it is a problem
-            - Recommended fix
-
-            ## Positive Aspects
-            Mention what is done well.
-
-            ## Improved Code
-            Provide revised code if substantial changes are needed.
-        """,
-    "tools": []
-}
 
 
 
@@ -181,10 +189,10 @@ def get_agent():
         _agent_instance = create_deep_agent(
             model=model,
             system_prompt=SYSTEM_PROMPT,
-            tools=[delete_file, execute_git_command],
-            subagents=[code_reviewer],
+            tools=[delete_file, execute_git_command, execute_terminal_command],
+            subagents=[code_reviewer, system_architect, debugger, api_researcher],
             # Note: virtual_mode=False is critical here so it writes actual files to the user's directory
-            backend=FilesystemBackend(root_dir=WORKING_DIR, virtual_mode=False),
+            backend=FilesystemBackend(root_dir=WORKING_DIR, virtual_mode=True),
             checkpointer=checkpointer
         )
     return _agent_instance
